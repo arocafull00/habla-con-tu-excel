@@ -1,10 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { TarjetaRespuesta, type Turno } from "@/components/TarjetaRespuesta";
-
-type Hoja = { nombre: string; filas: number; columnas: number };
-type Cargado = { id: string; archivo: string; hojas: Hoja[] };
+import { TarjetaRespuesta } from "@/components/TarjetaRespuesta";
+import { useSesion } from "@/hooks/useSesion";
+import { subirArchivo, type Cargado } from "@/lib/sesion";
 
 const SUGERENCIAS = [
   "¿Qué cliente nos ha dejado más dinero este año?",
@@ -32,26 +31,24 @@ function IconoEnviar() {
 }
 
 export default function Pagina() {
-  const [cargado, setCargado] = useState<Cargado | null>(null);
+  const { sesion, setSesion, preparada, errorPersistencia } = useSesion();
+  const cargado = sesion?.cargado ?? null;
+  const pregunta = sesion?.pregunta ?? "";
+  const turnos = sesion?.turnos ?? [];
   const [subiendo, setSubiendo] = useState(false);
   const [arrastrando, setArrastrando] = useState(false);
   const [errorSubida, setErrorSubida] = useState<string | null>(null);
-  const [pregunta, setPregunta] = useState("");
-  const [turnos, setTurnos] = useState<Turno[]>([]);
   const entradaArchivo = useRef<HTMLInputElement>(null);
   const contador = useRef(0);
+  const recuperacion = useRef<{ archivo: File; promesa: Promise<Cargado> } | null>(null);
 
   async function subir(archivo: File) {
+    if (!preparada || subiendo) return;
     setSubiendo(true);
     setErrorSubida(null);
     try {
-      const formulario = new FormData();
-      formulario.append("archivo", archivo);
-      const respuesta = await fetch("/api/subir", { method: "POST", body: formulario });
-      const datos = await respuesta.json();
-      if (!respuesta.ok) throw new Error(datos.error);
-      setCargado(datos);
-      setTurnos([]);
+      const datos = await subirArchivo(archivo);
+      setSesion({ cargado: datos, archivo, pregunta: "", turnos: [] });
     } catch (error) {
       setErrorSubida((error as Error).message || "No he podido leer el archivo.");
     } finally {
@@ -60,30 +57,52 @@ export default function Pagina() {
   }
 
   async function usarDemo() {
-    const respuesta = await fetch(ARCHIVO_DEMO);
-    const blob = await respuesta.blob();
-    await subir(new File([blob], ARCHIVO_DEMO.split("/").pop()!, { type: blob.type }));
+    try {
+      const respuesta = await fetch(ARCHIVO_DEMO);
+      if (!respuesta.ok) throw new Error("No he podido descargar el Excel de ejemplo.");
+      const blob = await respuesta.blob();
+      await subir(new File([blob], ARCHIVO_DEMO.split("/").pop()!, { type: blob.type }));
+    } catch (error) {
+      setErrorSubida((error as Error).message || "No he podido cargar el ejemplo.");
+    }
   }
 
   async function preguntar(texto: string) {
     const limpio = texto.trim();
-    if (!limpio || !cargado) return;
-    const id = ++contador.current;
-    setPregunta("");
-    setTurnos((t) => [{ id, pregunta: limpio, estado: "pensando" }, ...t]);
+    if (!limpio || !sesion) return;
+    const { archivo } = sesion;
+    const id = contador.current = sesion.turnos.reduce((maximo, turno) => Math.max(maximo, turno.id), contador.current) + 1;
+    setSesion((s) => s && s.archivo === archivo ? {
+      ...s, pregunta: "", turnos: [{ id, pregunta: limpio, estado: "pensando" }, ...s.turnos],
+    } : s);
     try {
-      const respuesta = await fetch("/api/preguntar", {
+      const enviar = (datasetId: string) => fetch("/api/preguntar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: cargado.id, pregunta: limpio }),
+        body: JSON.stringify({ id: datasetId, pregunta: limpio }),
       });
+      let respuesta = await enviar(sesion.cargado.id);
+      // El servidor puede haber reiniciado o estar atendiendo desde otra instancia.
+      if (respuesta.status === 404) {
+        if (recuperacion.current?.archivo !== archivo) {
+          recuperacion.current = { archivo, promesa: subirArchivo(archivo) };
+        }
+        const { promesa } = recuperacion.current;
+        const datos = await promesa.finally(() => {
+          if (recuperacion.current?.promesa === promesa) recuperacion.current = null;
+        });
+        setSesion((s) => s?.archivo === archivo ? { ...s, cargado: datos } : s);
+        respuesta = await enviar(datos.id);
+      }
       const datos = await respuesta.json();
       if (!respuesta.ok) throw new Error(datos.error);
-      setTurnos((t) => t.map((x) => (x.id === id ? { ...x, estado: "listo", respuesta: datos } : x)));
+      setSesion((s) => s?.archivo === archivo ? {
+        ...s, turnos: s.turnos.map((x) => x.id === id ? { ...x, estado: "listo", respuesta: datos } : x),
+      } : s);
     } catch (error) {
-      setTurnos((t) =>
-        t.map((x) => (x.id === id ? { ...x, estado: "error", error: (error as Error).message || "Algo ha fallado." } : x)),
-      );
+      setSesion((s) => s?.archivo === archivo ? {
+        ...s, turnos: s.turnos.map((x) => x.id === id ? { ...x, estado: "error", error: (error as Error).message || "Algo ha fallado." } : x),
+      } : s);
     }
   }
 
@@ -98,7 +117,11 @@ export default function Pagina() {
         <span className="text-xl font-semibold tracking-tight">Habla con tu Excel</span>
       </header>
 
-      {!cargado ? (
+      {errorPersistencia && <p role="alert" className="mt-4 text-[#b4361f]">{errorPersistencia}</p>}
+
+      {!preparada ? (
+        <p role="status" className="py-12 text-lg text-texto-suave">Recuperando tu sesión…</p>
+      ) : !cargado ? (
         <section className="flex flex-1 flex-col justify-center py-8 sm:py-12">
           <h1 className="max-w-2xl text-[2.1rem] font-semibold leading-[1.1] tracking-tight sm:text-6xl">
             Pregúntale a tu Excel como se lo preguntarías a una persona.
@@ -185,8 +208,7 @@ export default function Pagina() {
             <button
               type="button"
               onClick={() => {
-                setCargado(null);
-                setTurnos([]);
+                setSesion(null);
               }}
               className="text-sm text-texto-suave underline-offset-4 hover:text-texto hover:underline"
             >
@@ -204,7 +226,10 @@ export default function Pagina() {
             <input
               autoFocus
               value={pregunta}
-              onChange={(e) => setPregunta(e.target.value)}
+              onChange={(e) => {
+                const texto = e.target.value;
+                setSesion((s) => s ? { ...s, pregunta: texto } : s);
+              }}
               placeholder="Pregúntale lo que quieras a tu Excel…"
               className="min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none sm:py-3 sm:text-xl placeholder:text-[#a8a49a]"
             />

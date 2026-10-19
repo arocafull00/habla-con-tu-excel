@@ -9,6 +9,10 @@ Arrastra un Excel y pregúntale en lenguaje natural: "¿Qué cliente nos ha deja
 3. El modelo escribe consultas SQL de solo lectura, las comprueba y elige cómo mostrar el resultado (cifra, barras, líneas o tabla).
 4. La consulta final se ejecuta en local y el resultado se pinta en la interfaz.
 
+El navegador conserva el Excel original, las preguntas, las respuestas (incluidos gráficos y tablas) y el borrador en IndexedDB. Se recuperan al recargar o volver a abrir la aplicación en el mismo navegador. Si el servidor pierde el Excel en memoria, se vuelve a subir la copia guardada automáticamente al hacer la siguiente pregunta. Una pregunta que estaba en curso al recargar aparece como interrumpida y puede enviarse de nuevo.
+
+«Cambiar archivo» borra la sesión guardada. Los datos permanecen en ese navegador hasta cambiarlos o borrar sus datos del sitio; no se sincronizan entre dispositivos. Si el navegador impide guardar o se queda sin espacio, la interfaz avisa.
+
 ## Puesta en marcha
 
 Requiere Node.js 22.13 o superior y pnpm.
