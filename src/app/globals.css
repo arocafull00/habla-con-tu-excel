@@ -1,25 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --fondo: #f7f6f2;
-  --superficie: #ffffff;
-  --borde: #e6e3dc;
-  --texto: #191917;
-  --texto-suave: #6d6a63;
-  --acento: #0f7a4d;
-  --acento-suave: #e3f1e9;
-  --acento-fuerte: #0a5c39;
+  --fondo: oklch(0.985 0.002 160);
+  --superficie: oklch(1 0 0);
+  --hundido: oklch(0.965 0.004 160);
+  --borde: oklch(0.91 0.006 160);
+  --borde-fuerte: oklch(0.82 0.01 160);
+  --texto: oklch(0.21 0.012 160);
+  --texto-suave: oklch(0.46 0.012 160);
+  --acento: oklch(0.5 0.115 158);
+  --acento-fuerte: oklch(0.41 0.095 158);
+  --acento-suave: oklch(0.955 0.028 158);
+  --acento-tenue: oklch(0.8 0.06 158);
+  --error: oklch(0.5 0.16 32);
+  --error-suave: oklch(0.96 0.02 32);
 }
 
 @theme inline {
   --color-fondo: var(--fondo);
   --color-superficie: var(--superficie);
+  --color-hundido: var(--hundido);
   --color-borde: var(--borde);
+  --color-borde-fuerte: var(--borde-fuerte);
   --color-texto: var(--texto);
   --color-texto-suave: var(--texto-suave);
   --color-acento: var(--acento);
   --color-acento-suave: var(--acento-suave);
   --color-acento-fuerte: var(--acento-fuerte);
+  --color-acento-tenue: var(--acento-tenue);
+  --color-error: var(--error);
+  --color-error-suave: var(--error-suave);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -29,10 +39,17 @@ body {
   color: var(--texto);
 }
 
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+  }
+}
+
 @keyframes aparecer {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -41,19 +58,29 @@ body {
 }
 
 .aparecer {
-  animation: aparecer 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: aparecer 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes pulso {
-  0%,
-  100% {
-    opacity: 0.35;
+@keyframes barrido {
+  from {
+    background-position: 100% 0;
   }
-  50% {
-    opacity: 1;
+  to {
+    background-position: -100% 0;
   }
 }
 
-.pulso {
-  animation: pulso 1.2s ease-in-out infinite;
+.esqueleto {
+  background: linear-gradient(90deg, var(--hundido) 0%, var(--borde) 50%, var(--hundido) 100%);
+  background-size: 200% 100%;
+  animation: barrido 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aparecer {
+    animation: none;
+  }
+  .esqueleto {
+    animation: none;
+  }
 }

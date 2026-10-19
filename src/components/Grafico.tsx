@@ -2,11 +2,12 @@
 
 import { useSyncExternalStore } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -45,13 +46,16 @@ export function Grafico({ tipo, filas, ejeX, ejeY }: Props) {
 
   const tooltip = (
     <Tooltip
-      cursor={{ fill: "rgba(15, 122, 77, 0.06)" }}
-      contentStyle={{ borderRadius: 12, border: "1px solid var(--borde)", boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
+      cursor={tipo === "barras" ? { fill: "var(--acento-suave)" } : { stroke: "var(--borde-fuerte)" }}
+      contentStyle={{ borderRadius: 8, border: "1px solid var(--borde-fuerte)", boxShadow: "0 4px 8px oklch(0 0 0 / 0.06)", padding: "8px 12px" }}
+      labelStyle={{ color: "var(--texto-suave)", fontSize: 13, marginBottom: 2 }}
+      itemStyle={{ color: "var(--texto)", fontWeight: 600, padding: 0 }}
       formatter={(valor) => [formatearNumero(Number(valor), dinero), ejeY]}
     />
   );
 
   if (tipo === "barras") {
+    const maximo = Math.max(...datos.map((d) => d.y));
     const alto = Math.max(movil ? 180 : 220, datos.length * (movil ? 36 : 44));
     const caracteres = Math.max(...datos.map((d) => d.x.length));
     const anchoEtiquetas = movil ? Math.min(120, caracteres * 7.5 + 18) : Math.min(220, caracteres * 8.5 + 12);
@@ -71,10 +75,9 @@ export function Grafico({ tipo, filas, ejeX, ejeY }: Props) {
             {tooltip}
             <Bar
               dataKey="y"
-              fill="var(--acento)"
-              radius={[0, 8, 8, 0]}
-              barSize={movil ? 20 : 26}
-              animationDuration={900}
+              radius={[0, 4, 4, 0]}
+              barSize={movil ? 20 : 24}
+              animationDuration={600}
               label={{
                 position: "right",
                 fill: "var(--texto)",
@@ -82,7 +85,11 @@ export function Grafico({ tipo, filas, ejeX, ejeY }: Props) {
                 fontWeight: 600,
                 formatter: (valor: unknown) => formatearNumero(Number(valor), dinero),
               }}
-            />
+            >
+              {datos.map((d, i) => (
+                <Cell key={i} fill={d.y === maximo ? "var(--acento)" : "var(--acento-tenue)"} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -92,7 +99,7 @@ export function Grafico({ tipo, filas, ejeX, ejeY }: Props) {
   return (
     <div className="h-64 w-full sm:h-80">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={datos} margin={{ top: 12, right: movil ? 12 : 24, bottom: 4, left: movil ? 0 : 8 }}>
+        <AreaChart data={datos} margin={{ top: 12, right: movil ? 12 : 24, bottom: 4, left: movil ? 0 : 8 }}>
           <CartesianGrid stroke="var(--borde)" vertical={false} />
           <XAxis
             dataKey="x"
@@ -109,16 +116,23 @@ export function Grafico({ tipo, filas, ejeX, ejeY }: Props) {
             tickFormatter={(valor: number) => formatearEje(valor, dinero)}
           />
           {tooltip}
-          <Line
+          <defs>
+            <linearGradient id="relleno-linea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--acento)" stopOpacity={0.16} />
+              <stop offset="100%" stopColor="var(--acento)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
             type="monotone"
             dataKey="y"
             stroke="var(--acento)"
-            strokeWidth={3}
-            dot={{ r: 3, fill: "var(--acento)" }}
-            activeDot={{ r: 6 }}
-            animationDuration={1100}
+            strokeWidth={2.5}
+            fill="url(#relleno-linea)"
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--superficie)" }}
+            animationDuration={700}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
