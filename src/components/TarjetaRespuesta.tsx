@@ -38,11 +38,11 @@ function Pensando() {
 function Tabla({ respuesta }: { respuesta: Respuesta }) {
   return (
     <div className="max-h-[420px] overflow-auto rounded-xl border border-borde">
-      <table className="w-full border-collapse text-left text-[15px]">
+      <table className="w-full border-collapse text-left text-sm sm:text-[15px]">
         <thead className="sticky top-0 bg-[#f1efe9]">
           <tr>
             {respuesta.columnas.map((c) => (
-              <th key={c} className="whitespace-nowrap px-4 py-3 font-semibold text-texto">
+              <th key={c} className="whitespace-nowrap px-3 py-2.5 font-semibold sm:px-4 sm:py-3 text-texto">
                 {c}
               </th>
             ))}
@@ -54,7 +54,7 @@ function Tabla({ respuesta }: { respuesta: Respuesta }) {
               {respuesta.columnas.map((c) => (
                 <td
                   key={c}
-                  className={`whitespace-nowrap px-4 py-2.5 ${typeof fila[c] === "number" ? "text-right tabular-nums" : ""}`}
+                  className={`whitespace-nowrap px-3 py-2 sm:px-4 sm:py-2.5 ${typeof fila[c] === "number" ? "text-right tabular-nums" : ""}`}
                 >
                   {formatearCelda(fila[c], c)}
                 </td>
@@ -88,8 +88,8 @@ export function TarjetaRespuesta({ turno }: { turno: Turno }) {
   const respuesta = turno.respuesta;
 
   return (
-    <article className="aparecer rounded-3xl border border-borde bg-superficie p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.08)] sm:p-9">
-      <p className="text-[15px] font-medium text-texto-suave">{turno.pregunta}</p>
+    <article className="aparecer rounded-2xl border border-borde bg-superficie p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.08)] sm:rounded-3xl sm:p-9">
+      <p className="text-sm font-medium text-texto-suave sm:text-[15px]">{turno.pregunta}</p>
 
       {turno.estado === "pensando" && (
         <div className="mt-4">
@@ -100,13 +100,13 @@ export function TarjetaRespuesta({ turno }: { turno: Turno }) {
       {turno.estado === "error" && <p className="mt-4 text-lg text-[#b4361f]">{turno.error}</p>}
 
       {turno.estado === "listo" && respuesta && (
-        <div className="mt-4 space-y-6">
+        <div className="mt-3 space-y-5 sm:mt-4 sm:space-y-6">
           {respuesta.destacado && (
-            <p className="aparecer text-5xl font-semibold tracking-tight text-acento-fuerte sm:text-6xl">
+            <p className="aparecer break-words text-[2rem] font-semibold leading-tight tracking-tight text-acento-fuerte sm:text-6xl">
               {respuesta.destacado}
             </p>
           )}
-          <p className="aparecer text-xl leading-relaxed text-texto [animation-delay:0.08s]">{respuesta.respuesta}</p>
+          <p className="aparecer text-[17px] leading-relaxed text-texto sm:text-xl [animation-delay:0.08s]">{respuesta.respuesta}</p>
           <div className="aparecer [animation-delay:0.16s]">
             <Resultado respuesta={respuesta} />
           </div>

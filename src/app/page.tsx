@@ -90,7 +90,7 @@ export default function Pagina() {
   const totalFilas = cargado?.hojas.reduce((a, h) => a + h.filas, 0) ?? 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-5 pb-24 pt-10 sm:px-8 sm:pt-14">
+    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pb-16 pt-6 sm:px-8 sm:pb-24 sm:pt-14">
       <header className="flex items-center gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-acento text-white">
           <IconoHoja className="h-6 w-6" />
@@ -99,8 +99,8 @@ export default function Pagina() {
       </header>
 
       {!cargado ? (
-        <section className="flex flex-1 flex-col justify-center py-12">
-          <h1 className="max-w-2xl text-4xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">
+        <section className="flex flex-1 flex-col justify-center py-8 sm:py-12">
+          <h1 className="max-w-2xl text-[2.1rem] font-semibold leading-[1.1] tracking-tight sm:text-6xl">
             Pregúntale a tu Excel como se lo preguntarías a una persona.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-texto-suave sm:text-xl">
@@ -123,7 +123,7 @@ export default function Pagina() {
               const archivo = e.dataTransfer.files[0];
               if (archivo) subir(archivo);
             }}
-            className={`mt-10 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-16 text-center transition-all duration-200 ${
+            className={`mt-8 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-12 sm:mt-10 sm:py-16 text-center transition-all duration-200 ${
               arrastrando
                 ? "scale-[1.01] border-acento bg-acento-suave"
                 : "border-[#d6d2c8] bg-superficie hover:border-acento/60 hover:bg-[#fbfaf6]"
@@ -169,8 +169,8 @@ export default function Pagina() {
           </button>
         </section>
       ) : (
-        <section className="mt-10 flex flex-col gap-6">
-          <div className="aparecer flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-borde bg-superficie px-5 py-4">
+        <section className="mt-6 flex flex-col gap-4 sm:mt-10 sm:gap-6">
+          <div className="aparecer flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-borde bg-superficie px-4 py-3 sm:px-5 sm:py-4">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-acento-suave text-acento">
               <IconoHoja className="h-6 w-6" />
             </span>
@@ -199,20 +199,20 @@ export default function Pagina() {
               e.preventDefault();
               preguntar(pregunta);
             }}
-            className="aparecer flex items-center gap-3 rounded-2xl border border-borde bg-superficie p-2 pl-6 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.12)] focus-within:border-acento [animation-delay:0.06s]"
+            className="aparecer flex items-center gap-3 rounded-2xl border border-borde bg-superficie p-2 pl-4 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.12)] focus-within:border-acento [animation-delay:0.06s]"
           >
             <input
               autoFocus
               value={pregunta}
               onChange={(e) => setPregunta(e.target.value)}
               placeholder="Pregúntale lo que quieras a tu Excel…"
-              className="min-w-0 flex-1 bg-transparent py-3 text-xl outline-none placeholder:text-[#a8a49a]"
+              className="min-w-0 flex-1 bg-transparent py-2.5 text-lg outline-none sm:py-3 sm:text-xl placeholder:text-[#a8a49a]"
             />
             <button
               type="submit"
               disabled={!pregunta.trim()}
               aria-label="Preguntar"
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-acento text-white transition-colors hover:bg-acento-fuerte disabled:bg-[#d9d6ce]"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-acento sm:h-12 sm:w-12 text-white transition-colors hover:bg-acento-fuerte disabled:bg-[#d9d6ce]"
             >
               <IconoEnviar />
             </button>
@@ -225,7 +225,7 @@ export default function Pagina() {
                   key={s}
                   type="button"
                   onClick={() => preguntar(s)}
-                  className="rounded-full border border-borde bg-superficie px-4 py-2 text-[15px] text-texto-suave transition-colors hover:border-acento hover:text-acento-fuerte"
+                  className="rounded-full border border-borde bg-superficie px-3.5 py-2 text-sm text-texto-suave transition-colors sm:px-4 sm:text-[15px] hover:border-acento hover:text-acento-fuerte"
                 >
                   {s}
                 </button>
@@ -233,7 +233,7 @@ export default function Pagina() {
             </div>
           )}
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
             {turnos.map((turno) => (
               <TarjetaRespuesta key={turno.id} turno={turno} />
             ))}
